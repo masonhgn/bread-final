@@ -17,11 +17,7 @@ struct Settings {
     float farPlane = 100.0f;
 
 
-    // extra credit to make things work
-    bool extraCredit1 = false;  // ADD
-    bool extraCredit2 = false;  // ADD
-    bool extraCredit3 = false;  // ADD
-    bool extraCredit4 = false;  // ADD
+
 
     
     //proj6 toggle

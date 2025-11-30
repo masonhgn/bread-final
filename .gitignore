@@ -177,6 +177,9 @@ Thumbs.db
 *.dll
 *.exe
 
+/glew
+/glm
+
 build
 
 .idea

@@ -70,9 +70,9 @@ private slots:
     void onValChangeNearBox(double newValue);
     void onValChangeFarBox(double newValue);
 
-    // Extra Credit:
-    void onExtraCredit1();
-    void onExtraCredit2();
-    void onExtraCredit3();
-    void onExtraCredit4();
+    // // Extra Credit:
+    // void onExtraCredit1();
+    // void onExtraCredit2();
+    // void onExtraCredit3();
+    // void onExtraCredit4();
 };

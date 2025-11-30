@@ -146,22 +146,22 @@ void MainWindow::initialize() {
     lfar->addWidget(farBox);
     farLayout->setLayout(lfar);
 
-    // Extra Credit:
-    ec1 = new QCheckBox();
-    ec1->setText(QStringLiteral("Extra Credit 1"));
-    ec1->setChecked(false);
+    // // Extra Credit:
+    // ec1 = new QCheckBox();
+    // ec1->setText(QStringLiteral("Extra Credit 1"));
+    // ec1->setChecked(false);
 
-    ec2 = new QCheckBox();
-    ec2->setText(QStringLiteral("Extra Credit 2"));
-    ec2->setChecked(false);
+    // ec2 = new QCheckBox();
+    // ec2->setText(QStringLiteral("Extra Credit 2"));
+    // ec2->setChecked(false);
 
-    ec3 = new QCheckBox();
-    ec3->setText(QStringLiteral("Extra Credit 3"));
-    ec3->setChecked(false);
+    // ec3 = new QCheckBox();
+    // ec3->setText(QStringLiteral("Extra Credit 3"));
+    // ec3->setChecked(false);
 
-    ec4 = new QCheckBox();
-    ec4->setText(QStringLiteral("Extra Credit 4"));
-    ec4->setChecked(false);
+    // ec4 = new QCheckBox();
+    // ec4->setText(QStringLiteral("Extra Credit 4"));
+    // ec4->setChecked(false);
 
     vLayout->addWidget(uploadFile);
     vLayout->addWidget(saveImage);
@@ -181,12 +181,12 @@ void MainWindow::initialize() {
     // vLayout->addWidget(filter1);
     // vLayout->addWidget(filter2);
 
-    // Extra Credit:
-    vLayout->addWidget(ec_label);
-    vLayout->addWidget(ec1);
-    vLayout->addWidget(ec2);
-    vLayout->addWidget(ec3);
-    vLayout->addWidget(ec4);
+    // // Extra Credit:
+    // vLayout->addWidget(ec_label);
+    // vLayout->addWidget(ec1);
+    // vLayout->addWidget(ec2);
+    // vLayout->addWidget(ec3);
+    // vLayout->addWidget(ec4);
 
     connectUIElements();
 
@@ -214,7 +214,7 @@ void MainWindow::connectUIElements() {
     connectParam2();
     connectNear();
     connectFar();
-    connectExtraCredit();
+    // connectExtraCredit();
 }
 
 
@@ -258,12 +258,12 @@ void MainWindow::connectFar() {
             this, &MainWindow::onValChangeFarBox);
 }
 
-void MainWindow::connectExtraCredit() {
-    connect(ec1, &QCheckBox::clicked, this, &MainWindow::onExtraCredit1);
-    connect(ec2, &QCheckBox::clicked, this, &MainWindow::onExtraCredit2);
-    connect(ec3, &QCheckBox::clicked, this, &MainWindow::onExtraCredit3);
-    connect(ec4, &QCheckBox::clicked, this, &MainWindow::onExtraCredit4);
-}
+// void MainWindow::connectExtraCredit() {
+//     connect(ec1, &QCheckBox::clicked, this, &MainWindow::onExtraCredit1);
+//     connect(ec2, &QCheckBox::clicked, this, &MainWindow::onExtraCredit2);
+//     connect(ec3, &QCheckBox::clicked, this, &MainWindow::onExtraCredit3);
+//     connect(ec4, &QCheckBox::clicked, this, &MainWindow::onExtraCredit4);
+// }
 
 // From old Project 6
 // void MainWindow::onPerPixelFilter() {
@@ -362,22 +362,22 @@ void MainWindow::onValChangeFarBox(double newValue) {
 
 // Extra Credit:
 
-void MainWindow::onExtraCredit1() {
-    settings.extraCredit1 = !settings.extraCredit1;
-    realtime->settingsChanged();
-}
+// void MainWindow::onExtraCredit1() {
+//     settings.extraCredit1 = !settings.extraCredit1;
+//     realtime->settingsChanged();
+// }
 
-void MainWindow::onExtraCredit2() {
-    settings.extraCredit2 = !settings.extraCredit2;
-    realtime->settingsChanged();
-}
+// void MainWindow::onExtraCredit2() {
+//     settings.extraCredit2 = !settings.extraCredit2;
+//     realtime->settingsChanged();
+// }
 
-void MainWindow::onExtraCredit3() {
-    settings.extraCredit3 = !settings.extraCredit3;
-    realtime->settingsChanged();
-}
+// void MainWindow::onExtraCredit3() {
+//     settings.extraCredit3 = !settings.extraCredit3;
+//     realtime->settingsChanged();
+// }
 
-void MainWindow::onExtraCredit4() {
-    settings.extraCredit4 = !settings.extraCredit4;
-    realtime->settingsChanged();
-}
+// void MainWindow::onExtraCredit4() {
+//     settings.extraCredit4 = !settings.extraCredit4;
+//     realtime->settingsChanged();
+// }
