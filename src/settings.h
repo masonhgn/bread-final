@@ -3,6 +3,7 @@
 #define SETTINGS_H
 
 #include <string>
+#include <glm/glm.hpp> 
 
 struct Settings {
     std::string sceneFilePath;
@@ -14,6 +15,14 @@ struct Settings {
     //camera
     float nearPlane = 0.1f;
     float farPlane = 100.0f;
+
+
+    // extra credit to make things work
+    bool extraCredit1 = false;  // ADD
+    bool extraCredit2 = false;  // ADD
+    bool extraCredit3 = false;  // ADD
+    bool extraCredit4 = false;  // ADD
+
     
     //proj6 toggle
     bool enableFog = false;

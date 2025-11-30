@@ -79,3 +79,11 @@ void ShaderManager::setLight(int index, const SceneLightData& light) const {
     setUniformFloat(base + ".penumbra", light.penumbra);
     setUniformFloat(base + ".angle", light.angle);
 }
+
+
+void ShaderManager::setUniformBool(const std::string& name, bool value) const {
+    GLint loc = getUniformLocation(name);
+    if (loc != -1) {
+        glUniform1i(loc, value ? 1 : 0);
+    }
+}

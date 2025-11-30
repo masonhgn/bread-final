@@ -117,6 +117,20 @@ void Realtime::paintGL() {
 
     setGlobalUniforms();
 
+
+    m_shaderManager.setUniformInt("enableFog", settings.enableFog ? 1 : 0);
+    m_shaderManager.setUniformInt("enableNormalMapping", settings.enableNormalMapping ? 1 : 0);
+    m_shaderManager.setUniformInt("enableScrolling", settings.enableScrolling ? 1 : 0);
+    m_shaderManager.setUniformInt("hasDiffuseTexture", 0);
+    m_shaderManager.setUniformInt("hasNormalMap", 0);
+    m_shaderManager.setUniformVec3("fogColor", settings.fogColor);
+    m_shaderManager.setUniformFloat("fogStart", settings.fogStart);
+    m_shaderManager.setUniformFloat("fogEnd", settings.fogEnd);
+    m_shaderManager.setUniformFloat("fogDensity", settings.fogDensity);
+    m_shaderManager.setUniformFloat("time", 0.0f); 
+
+
+
     for (const RenderShapeData& shape : m_renderData.shapes) {
         renderShape(shape);
     }

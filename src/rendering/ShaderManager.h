@@ -20,6 +20,7 @@ public:
     void setUniformVec4(const std::string& name, const glm::vec4& vec) const;
     void setUniformFloat(const std::string& name, float value) const;
     void setUniformInt(const std::string& name, int value) const;
+    void setUniformBool(const std::string& name, bool value) const;
 
     void setLight(int index, const SceneLightData& light) const;
 
