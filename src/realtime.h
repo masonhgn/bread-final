@@ -1,0 +1,65 @@
+#pragma once
+
+#ifdef __APPLE__
+#define GL_SILENCE_DEPRECATION
+#endif
+#include <GL/glew.h>
+#include <glm/glm.hpp>
+
+#include <unordered_map>
+#include <memory>
+#include <QElapsedTimer>
+#include <QOpenGLWidget>
+#include <QTime>
+#include <QTimer>
+
+#include "camera/Camera.h"
+#include "shapes/ShapeManager.h"
+#include "rendering/ShaderManager.h"
+#include "utils/sceneparser.h"
+
+class Realtime : public QOpenGLWidget
+{
+public:
+    Realtime(QWidget *parent = nullptr);
+    void finish();
+    void sceneChanged();
+    void settingsChanged();
+    void saveViewportImage(std::string filePath);
+
+public slots:
+    void tick(QTimerEvent* event);
+
+protected:
+    void initializeGL() override;
+    void paintGL() override;
+    void resizeGL(int width, int height) override;
+
+private:
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void timerEvent(QTimerEvent *event) override;
+
+    void setGlobalUniforms();
+    void renderShape(const RenderShapeData& shape);
+
+    int m_timer;
+    QElapsedTimer m_elapsedTimer;
+
+    bool m_mouseDown = false;
+    glm::vec2 m_prev_mouse_pos;
+    std::unordered_map<Qt::Key, bool> m_keyMap;
+
+    double m_devicePixelRatio;
+
+    RenderData m_renderData;
+    bool m_sceneLoaded = false;
+    bool m_initialized = false;
+
+    std::unique_ptr<Camera> m_camera;
+    ShapeManager m_shapeManager;
+    ShaderManager m_shaderManager;
+};
