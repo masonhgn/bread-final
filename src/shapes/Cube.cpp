@@ -16,11 +16,25 @@ void Cube::makeTile(glm::vec3 topLeft,
     glm::vec3 v = topRight - topLeft;
     glm::vec3 normal = glm::normalize(glm::cross(u, v));
 
-    // helper to insert position + normal + uv for a vertex
+    // calculate tangent (along u direction in texture space)
+    // tangent points along the horizontal edge (increasing u)
+    glm::vec3 tangent = glm::normalize(topRight - topLeft);
+
+    // calculate bitangent (along v direction in texture space)
+    // bitangent points along the vertical edge (increasing v)
+    glm::vec3 bitangent = glm::normalize(bottomLeft - topLeft);
+
+    // orthonormalize using gram-schmidt process
+    tangent = glm::normalize(tangent - glm::dot(tangent, normal) * normal);
+    bitangent = glm::normalize(bitangent - glm::dot(bitangent, normal) * normal - glm::dot(bitangent, tangent) * tangent);
+
+    // helper to insert position + normal + uv + tangent + bitangent for a vertex
     auto helper = [&](glm::vec3 pos) {
         insertVec3(m_vertexData, pos);
         insertVec3(m_vertexData, normal);
         insertVec2(m_vertexData, getUVCoords(PrimitiveType::PRIMITIVE_CUBE, pos));
+        insertVec3(m_vertexData, tangent);
+        insertVec3(m_vertexData, bitangent);
     };
 
     // triangle 1

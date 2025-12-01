@@ -3,6 +3,8 @@
 in vec3 fragPosition;
 in vec3 fragNormal;
 in vec2 fragUV;
+in vec3 fragTangent;
+in vec3 fragBitangent;
 
 out vec4 fragColor;
 

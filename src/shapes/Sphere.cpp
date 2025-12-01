@@ -12,6 +12,22 @@ glm::vec3 spherePoint(float phi, float theta, float r = 0.5f) {
     return glm::vec3(x, y, z);
 }
 
+// compute tangent vector (derivative with respect to theta - longitude direction)
+glm::vec3 sphereTangent(float phi, float theta, float r = 0.5f) {
+    float x = -r * sin(phi) * sin(theta);
+    float y = 0.0f;
+    float z = -r * sin(phi) * cos(theta);
+    return glm::normalize(glm::vec3(x, y, z));
+}
+
+// compute bitangent vector (derivative with respect to phi - latitude direction)
+glm::vec3 sphereBitangent(float phi, float theta, float r = 0.5f) {
+    float x = r * cos(phi) * cos(theta);
+    float y = -r * sin(phi);
+    float z = -r * cos(phi) * sin(theta);
+    return glm::normalize(glm::vec3(x, y, z));
+}
+
 void Sphere::updateParams(int param1, int param2) {
     m_vertexData = std::vector<float>();
     m_param1 = param1;
@@ -19,24 +35,31 @@ void Sphere::updateParams(int param1, int param2) {
     setVertexData();
 }
 
-void Sphere::makeTile(glm::vec3 topLeft,
-                      glm::vec3 topRight,
-                      glm::vec3 bottomLeft,
-                      glm::vec3 bottomRight) {
-    auto helper = [&](glm::vec3 p) {
+void Sphere::makeTile(glm::vec3 topLeft, glm::vec3 topRight,
+                      glm::vec3 bottomLeft, glm::vec3 bottomRight,
+                      float phi1, float phi2, float theta1, float theta2) {
+    // helper to insert position + normal + uv + tangent + bitangent for a vertex
+    auto helper = [&](glm::vec3 p, float phi, float theta) {
         glm::vec3 n = glm::normalize(p);
+        glm::vec3 tangent = sphereTangent(phi, theta);
+        glm::vec3 bitangent = sphereBitangent(phi, theta);
+
         insertVec3(m_vertexData, p);
         insertVec3(m_vertexData, n);
         insertVec2(m_vertexData, getUVCoords(PrimitiveType::PRIMITIVE_SPHERE, p));
+        insertVec3(m_vertexData, tangent);
+        insertVec3(m_vertexData, bitangent);
     };
 
-    helper(topLeft);
-    helper(bottomLeft);
-    helper(bottomRight);
+    // triangle 1
+    helper(topLeft, phi1, theta1);
+    helper(bottomLeft, phi2, theta1);
+    helper(bottomRight, phi2, theta2);
 
-    helper(topLeft);
-    helper(bottomRight);
-    helper(topRight);
+    // triangle 2
+    helper(topLeft, phi1, theta1);
+    helper(bottomRight, phi2, theta2);
+    helper(topRight, phi1, theta2);
 }
 
 void Sphere::makeWedge(float currentTheta, float nextTheta) {
@@ -54,7 +77,7 @@ void Sphere::makeWedge(float currentTheta, float nextTheta) {
         glm::vec3 bottomLeft  = spherePoint(phi2, currentTheta);
         glm::vec3 bottomRight = spherePoint(phi2, nextTheta);
 
-        makeTile(topLeft, topRight, bottomLeft, bottomRight);
+        makeTile(topLeft, topRight, bottomLeft, bottomRight, phi1, phi2, currentTheta, nextTheta);
     }
 }
 

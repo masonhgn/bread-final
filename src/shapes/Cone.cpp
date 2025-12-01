@@ -18,11 +18,20 @@ glm::vec3 calcNorm(glm::vec3& pt) {
 
 void Cone::makeCapTile(glm::vec3 center, glm::vec3 p1, glm::vec3 p2) {
     glm::vec3 n(0, -1, 0);
+
+    // use consistent tangent/bitangent for flat base cap
+    glm::vec3 tangent = glm::vec3(1, 0, 0);
+    glm::vec3 bitangent = glm::vec3(0, 0, 1);
+
     auto addV = [&](glm::vec3 pos) {
         insertVec3(m_vertexData, pos);
         insertVec3(m_vertexData, n);
         insertVec2(m_vertexData, getUVCoords(PrimitiveType::PRIMITIVE_CONE, pos));
+        insertVec3(m_vertexData, tangent);
+        insertVec3(m_vertexData, bitangent);
     };
+
+    // winding order for bottom cap (same as cylinder bottom cap)
     addV(center);
     addV(p1);
     addV(p2);
@@ -33,9 +42,18 @@ void Cone::makeSlopeTile(glm::vec3 p1, glm::vec3 p2,
 {
     auto addV = [&](glm::vec3 p) {
         glm::vec3 n = calcNorm(p);
+
+        // tangent points along circumference (perpendicular to radial direction in xz plane)
+        glm::vec3 tangent = glm::normalize(glm::vec3(-p.z, 0, p.x));
+
+        // bitangent is perpendicular to both normal and tangent
+        glm::vec3 bitangent = glm::cross(n, tangent);
+
         insertVec3(m_vertexData, p);
         insertVec3(m_vertexData, n);
         insertVec2(m_vertexData, getUVCoords(PrimitiveType::PRIMITIVE_CONE, p));
+        insertVec3(m_vertexData, tangent);
+        insertVec3(m_vertexData, bitangent);
     };
 
     addV(p1); addV(p3); addV(p4);

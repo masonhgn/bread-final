@@ -276,15 +276,10 @@ void MainWindow::connectFar() {
 // }
 
 void MainWindow::onUploadFile() {
-    // Get abs path of scene file
+    // get abs path of scene file
     QString configFilePath = QFileDialog::getOpenFileName(this, tr("Upload File"),
-                                                          QDir::currentPath()
-                                                              .append(QDir::separator())
-                                                              .append("scenefiles")
-                                                              .append(QDir::separator())
-                                                              .append("realtime")
-                                                              .append(QDir::separator())
-                                                              .append("required"), tr("Scene Files (*.json)"));
+                                                          QDir::currentPath(),
+                                                          tr("Scene Files (*.xml *.json)"));
     if (configFilePath.isNull()) {
         std::cout << "Failed to load null scenefile." << std::endl;
         return;

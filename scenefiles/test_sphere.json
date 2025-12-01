@@ -1,0 +1,39 @@
+{
+  "name": "root",
+  "globalData": {
+    "ambientCoeff": 0.5,
+    "diffuseCoeff": 0.5,
+    "specularCoeff": 0.5,
+    "transparentCoeff": 0
+  },
+  "cameraData": {
+    "position": [5, 5, 5],
+    "up": [0, 1, 0],
+    "look": [-1, -1, -1],
+    "heightAngle": 45
+  },
+  "groups": [
+    {
+      "name": "scene",
+      "lights": [
+        {
+          "type": "directional",
+          "color": [1, 1, 1],
+          "attenuationCoeff": [1, 0, 0],
+          "direction": [-1, -1, -1]
+        }
+      ],
+      "primitives": [
+        {
+          "type": "sphere",
+          "ambient": [0.4, 0.3, 0.2],
+          "diffuse": [0.8, 0.6, 0.4],
+          "specular": [0.5, 0.5, 0.5],
+          "shininess": 25,
+          "reflective": [0, 0, 0],
+          "transparent": [0, 0, 0]
+        }
+      ]
+    }
+  ]
+}

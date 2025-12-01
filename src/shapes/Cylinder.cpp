@@ -4,24 +4,44 @@
 
 void Cylinder::makeCapTile(glm::vec3 center, glm::vec3 p1, glm::vec3 p2, bool isTop) {
     glm::vec3 n = isTop ? glm::vec3(0, 1, 0) : glm::vec3(0, -1, 0);
+
+    // use consistent tangent/bitangent for entire cap (flat surface)
+    // ensure cross(tangent, bitangent) points in direction of normal
+    glm::vec3 tangent = glm::vec3(1, 0, 0);
+    glm::vec3 bitangent = isTop ? glm::vec3(0, 0, -1) : glm::vec3(0, 0, 1);
+
     auto addV = [&](glm::vec3 pos) {
         insertVec3(m_vertexData, pos);
         insertVec3(m_vertexData, n);
         insertVec2(m_vertexData, getUVCoords(PrimitiveType::PRIMITIVE_CYLINDER, pos));
+        insertVec3(m_vertexData, tangent);
+        insertVec3(m_vertexData, bitangent);
     };
+
+    // reverse winding order so caps face outward (for back-face culling)
     if (isTop) {
-        addV(center); addV(p1); addV(p2);
-    } else {
         addV(center); addV(p2); addV(p1);
+    } else {
+        addV(center); addV(p1); addV(p2);
     }
 }
 
 void Cylinder::makeBodyTile(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4) {
     auto addV = [&](glm::vec3 p) {
+        // normal points radially outward
         glm::vec3 n = glm::normalize(glm::vec3(p.x, 0, p.z));
+
+        // tangent points along circumference (perpendicular to normal in xz plane)
+        glm::vec3 tangent = glm::normalize(glm::vec3(-p.z, 0, p.x));
+
+        // bitangent points along cylinder axis (y direction)
+        glm::vec3 bitangent = glm::vec3(0, 1, 0);
+
         insertVec3(m_vertexData, p);
         insertVec3(m_vertexData, n);
         insertVec2(m_vertexData, getUVCoords(PrimitiveType::PRIMITIVE_CYLINDER, p));
+        insertVec3(m_vertexData, tangent);
+        insertVec3(m_vertexData, bitangent);
     };
     addV(p1); addV(p3); addV(p4);
     addV(p1); addV(p4); addV(p2);
