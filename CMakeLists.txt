@@ -40,6 +40,8 @@ add_executable(${PROJECT_NAME}
     src/shapes/ShapeManager.cpp
 
     src/rendering/ShaderManager.cpp
+    src/rendering/TextureManager.cpp
+    src/rendering/InstanceManager.cpp
 
     src/mainwindow.h
     src/realtime.h
@@ -60,6 +62,8 @@ add_executable(${PROJECT_NAME}
     src/shapes/ShapeManager.h
 
     src/rendering/ShaderManager.h
+    src/rendering/TextureManager.h
+    src/rendering/InstanceManager.h
 )
 
 
@@ -88,10 +92,48 @@ qt6_add_resources(${PROJECT_NAME} "Resources"
         resources/shaders/default.vert
 )
 
+# test executables (optional - only built if explicitly requested)
+# test 1: tangent/bitangent mathematical correctness
+add_executable(test_tangent_bitangent
+    tests/test_tangent_bitangent.cpp
+    src/shapes/Cube.cpp
+    src/shapes/Sphere.cpp
+    src/shapes/Cylinder.cpp
+    src/shapes/Cone.cpp
+    src/utils/uvmapper.cpp
+)
+
+target_link_libraries(test_tangent_bitangent PRIVATE
+    Qt::Core
+)
+
+# test 2: texture manager functionality
+add_executable(test_texture_manager
+    tests/test_texture_manager.cpp
+    src/rendering/TextureManager.cpp
+)
+
+target_link_libraries(test_texture_manager PRIVATE
+    Qt::Core
+    Qt::Gui
+    Qt::OpenGL
+    Qt::OpenGLWidgets
+    StaticGLEW
+)
+
+# enable ctest
+enable_testing()
+add_test(NAME TangentBitangentTest COMMAND test_tangent_bitangent)
+add_test(NAME TextureManagerTest COMMAND test_texture_manager)
+
 # GLEW: this provides support for Windows (including 64-bit)
 if (WIN32)
   add_compile_definitions(GLEW_STATIC)
   target_link_libraries(${PROJECT_NAME} PRIVATE
+    opengl32
+    glu32
+  )
+  target_link_libraries(test_texture_manager PRIVATE
     opengl32
     glu32
   )

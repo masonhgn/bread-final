@@ -21,6 +21,9 @@ public:
     GLuint getVAO(PrimitiveType type) const;
     int getVertexCount(PrimitiveType type) const;
 
+    // configure instance attributes for a VAO
+    void setupInstanceAttributes(PrimitiveType type, GLuint instanceVBO);
+
     void cleanup();
 
 private:

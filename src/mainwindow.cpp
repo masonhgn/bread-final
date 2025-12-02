@@ -196,12 +196,19 @@ void MainWindow::initialize() {
 
     // Set default values for near and far planes
     onValChangeNearBox(0.1f);
-    onValChangeFarBox(10.f);
+    onValChangeFarBox(30.f);
+
+    settings.sceneFilePath = "/Users/fluffy/projects/cs1230/bread-final/scenefiles/test_all_features.json";
 }
 
 void MainWindow::finish() {
     realtime->finish();
     delete(realtime);
+}
+
+void MainWindow::saveScreenshot(const std::string& filePath) {
+    std::cout << "saving screenshot to: " << filePath << std::endl;
+    realtime->saveViewportImage(filePath);
 }
 
 void MainWindow::connectUIElements() {
@@ -276,15 +283,10 @@ void MainWindow::connectFar() {
 // }
 
 void MainWindow::onUploadFile() {
-    // Get abs path of scene file
+    // get abs path of scene file
     QString configFilePath = QFileDialog::getOpenFileName(this, tr("Upload File"),
-                                                          QDir::currentPath()
-                                                              .append(QDir::separator())
-                                                              .append("scenefiles")
-                                                              .append(QDir::separator())
-                                                              .append("realtime")
-                                                              .append(QDir::separator())
-                                                              .append("required"), tr("Scene Files (*.json)"));
+                                                          QDir::currentPath(),
+                                                          tr("Scene Files (*.xml *.json)"));
     if (configFilePath.isNull()) {
         std::cout << "Failed to load null scenefile." << std::endl;
         return;

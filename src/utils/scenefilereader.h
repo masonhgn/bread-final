@@ -27,8 +27,6 @@ public:
     SceneNode *getRootNode() const;
 
 private:
-    // The filename should be contained within this parser implementation.
-    // If you want to parse a new file, instantiate a different parser.
     bool parseGlobalData(const QJsonObject &globaldata);
     bool parseCameraData(const QJsonObject &cameradata);
     bool parseTemplateGroups(const QJsonValue &templateGroups);

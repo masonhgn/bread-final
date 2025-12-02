@@ -16,6 +16,7 @@ public:
     GLuint getProgram() const { return m_program; }
 
     void setUniformMat4(const std::string& name, const glm::mat4& mat) const;
+    void setUniformVec2(const std::string& name, const glm::vec2& vec) const;
     void setUniformVec3(const std::string& name, const glm::vec3& vec) const;
     void setUniformVec4(const std::string& name, const glm::vec4& vec) const;
     void setUniformFloat(const std::string& name, float value) const;

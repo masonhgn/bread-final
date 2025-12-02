@@ -1,290 +1,300 @@
-# BREAD LAND
+# Project 6 BREAD
 
-## Project Overview
+## running tests
 
-A realtime landscape where everything is made of bread. Features bread-textured terrain, mountains resembling loaves, and atmospheric effects creating a warm, golden bread-themed world.
 
-## Technical Features
+run unit tests:
+```bash
+cd build
+ctest -V
+cd ..
+```
 
-### 1. Realtime Fog (20 points)
+run all visual tests:
+```bash
+./run-tests.sh
+```
 
-[tutorial](https://opengl-notes.readthedocs.io/en/latest/topics/texturing/aliasing.html#fog)
+All screenshots will be saved to student_outputs/final_project/
 
-- Implementation: Depth-based fog calculation in fragment shader
-- Purpose: Create atmospheric golden haze throughout Bread Land
-- Dependencies: Depth Buffers (already implemented)
-- Why first: Simplest feature, sets the atmospheric tone
+## Features implemented
 
-### 2. Normal Mapping (40 points)
+### Feature 1: normal mapping (40 points)
 
-[tutorial](https://www.opengl-tutorial.org/intermediate-tutorials/tutorial-13-normal-mapping/)
+Normal mapping adds surface detail to shapes without increasing geometry complexity. each vertex includes tangent and bitangent vectors in addition to position, normal, and uv coordinates. the fragment shader constructs a tbn (tangent-bitangent-normal) matrix to transform normal map samples from tangent space to world space.
 
-- Implementation: Fragment shader that perturbs surface normals using a texture
-- Purpose: Add surface detail to bread crusts on terrain, mountains, and objects
-- Dependencies: None
-- Why second: Core visual feature that all bread surfaces will use
+Implementation details:
+- vertex format extended from 8 floats to 14 floats per vertex
+- tangent calculated along u direction, bitangent along v direction
+- special handling for sphere poles where tangent degenerates
+- texturemanager class handles texture loading and caching
 
-### 3. Scrolling Textures (20 points)
+### feature 2: realtime fog (20 points)
 
-tutorial
+Distance-based fog blends distant objects with a fog color. the effect is calculated per-fragment using the distance from camera to fragment position. 
 
-- Implementation: Time-based UV coordinate offset in shader
-- Purpose: Animate flowing butter rivers or rotating bread artifacts
-- Dependencies: None
-- Why third: Simple animation system built on existing texture pipeline
 
-### 4. Instanced Rendering (20 points)
+linear interpolation is used between fog start and fog end distances.
 
-[tutorial](https://learnopengl.com/Advanced-OpenGL/Instancing)
+Implementation details:
+- fog calculation: fogfactor = clamp((fogend - distance) / (fogend - fogstart), 0, 1)
+- final color = mix(fogcolor, litcolor, fogfactor)
+- background clear color matches fog color for seamless blending
 
-- Implementation: Single draw call to render multiple copies of bread models
-- Purpose: Efficiently render fields of bread rolls, baguette forests, or scattered crumbs
-- dependencies: None
-- Why last: Performance optimization after core visuals are working
+### Feature 3: scrolling textures (20 points)
 
+Ttexture coordinates are offset over time to create animated scrolling effects. the scroll direction and speed are configurable.
 
+implementation details:
+- uv offset calculated as: scrolldirection * scrollspeed * time
+- works with any loaded diffuse texture
+- scroll direction is a normalized 2d vector
 
+### Feature 4: Instanced rendering (20 points)
 
-## Design Details
+Instanced rendering uses gldrawarraysinstanced to render many copies of the same geometry with a single draw call. each instance has its own transformation matrix stored in a vertex buffer.
 
-### Scene Architecture
+Implementation details:
+- instancemanager generates random transformation matrices
+- per-instance mat4 passed via vertex attributes at locations 5-8
+- vertex shader selects between modelmatrix and instancematrix based on uniform
+- approximately 10x performance improvement over individual draw calls
 
-Bread Land consists of interconnected bread-themed components:
+## tests
 
-1. Terrain System: Rolling hills and valleys with bread crust texture and normal mapping
-2. Mountain System: Background mountains shaped like loaves with crusty peaks
-3. Atmospheric System: steamy fog creating depth and warmth
-4. Decorations?: Instanced bread objects scattered throughout (rolls, baguettes, croissants)
-5. Animations: Flowing butter rivers or rotating bread monuments using scrolling textures
+### fog tests
 
-### Component Interactions
+#### test 1: fog disabled
+baseline render with no fog applied. all objects visible at full color regardless of distance.
 
-- Terrain and mountains share the same bread crust normal maps but at different scales
-- Fog system uses depth buffer to fade distant mountains into golden haze
-- Instanced objects (bread rolls, baguettes) are placed on terrain surface using height sampling
-- Scrolling textures applied to specific geometry (butter rivers) overlay the terrain
-- All components use consistent bread-colored palette (golden browns, warm yellows)
+scene: scenefiles/test_fog.json
+settings: enablefog = false
 
-### Visual Hierarchy
+![fog disabled](student_outputs/final_project/fog_disabled.png)
 
-1. Foreground: Detailed instanced bread objects with strong normal mapping
-2. Midground: Terrain with moderate normal mapping detail
-3. Background: Mountains with subtle normal mapping, heavily affected by fog
-4. Atmosphere: Fog intensity increases with distance, unifying all layers
+#### test 2: fog enabled
+fog applied with default settings. objects fade to fog color based on distance from camera.
 
+scene: scenefiles/test_fog.json
+settings: enablefog = true, fogstart = 8.0, fogend = 20.0, fogcolor = (0.8, 0.85, 0.9)
 
+![fog enabled](student_outputs/final_project/fog_enabled.png)
 
+#### test 3: fog near start
+fog starts closer to camera. objects begin fading at z = -5 instead of z = -8.
 
+scene: scenefiles/test_fog.json
+settings: enablefog = true, fogstart = 5.0, fogend = 20.0
 
+![fog near start](student_outputs/final_project/fog_near_start.png)
 
+#### test 4: fog far start
+fog starts further from camera. more objects visible before fog begins.
 
+scene: scenefiles/test_fog.json
+settings: enablefog = true, fogstart = 15.0, fogend = 25.0
 
-## Implementation Plan
+![fog far start](student_outputs/final_project/fog_far_start.png)
 
+#### test 5: fog warm color
+fog color changed to warm tone. demonstrates color parameter control.
 
-### Rough overview
+scene: scenefiles/test_fog.json
+settings: enablefog = true, fogcolor = (1.0, 0.9, 0.7)
 
-1. Start from existing Realtime project codebase
-2. Create terrain mesh (procedural grid or heightmap-based)
-3. Model mountain geometry as large triangulated loaves
-4. Create or obtain bread crust textures and normal maps
-5. Set up camera with ability to move through the landscape
-6. Establish warm directional lighting (simulating golden hour)
+![fog warm color](student_outputs/final_project/fog_color_warm.png)
 
+### normal mapping tests
 
-### Feature Implementation Order
+#### test 6: normal mapping disabled
+baseline render with flat shading. surface appears smooth without detail.
 
-#### Phase 1: Realtime Fog
+scene: scenefiles/test_normal_mapping.json
+settings: enablenormalmapping = false
 
-1. Ensure depth buffer is accessible in fragment shader
-2. Implement linear or exponential fog calculation based on fragment depth
-3. Set fog color to warm golden/amber tone
-4. Add UI controls for fog density, start distance, and end distance
-5. Test fog at various distances and densities
+![normal mapping disabled](student_outputs/final_project/normal_map_disabled.png)
 
-Component Integration:
+#### test 7: normal mapping enabled
+normal map applied showing surface detail. bumps and surface variation visible.
 
-- Fog wraps around all geometry uniformly
-- Depth buffer automatically populated by OpenGL during rendering
-- Fog color matches overall bread color scheme
+scene: scenefiles/test_normal_mapping.json
+settings: enablenormalmapping = true
 
-#### Phase 2: Normal Mapping
+![normal mapping enabled](student_outputs/final_project/normal_map_enabled.png)
 
-1. Generate or obtain normal map textures for bread crust detail
-2. Calculate tangent and bitangent vectors for all geometry vertices
-3. Implement tangent-space normal mapping in fragment shader
-4. Apply normal mapping to terrain, mountains, and decoration objects
-5. Test with multiple normal map intensities and different bread textures
+### scrolling texture tests
 
-Component Integration:
+#### test 8: scrolling disabled
+baseline render with static textures. texture coordinates do not change over time.
 
-- All geometry shares the same normal mapping shader code
-- Terrain uses tiled normal maps for consistent crust appearance
-- Mountains use same normal maps at larger scale for bigger crust features
-- Normal-mapped surfaces interact correctly with fog (lighting calculated before fog)
+scene: scenefiles/test_scrolling.json
+settings: enablescrolling = false
 
-#### Phase 3: Scrolling Textures
+![scrolling disabled](student_outputs/final_project/scrolling_disabled.png)
 
-1. Add time uniform to shader system
-2. Create butter texture (yellow/gold with flowing appearance)
-3. Model river geometry cutting through terrain
-4. Implement UV scrolling in fragment shader (offset UVs by time * scroll_speed)
-5. Test different scroll speeds and directions
+#### test 9: scrolling enabled
+texture scrolls horizontally at medium speed. visible animation when run interactively.
 
-Component Integration:
+scene: scenefiles/test_scrolling.json
+settings: enablescrolling = true, scrollspeed = 0.5, scrolldirection = (1.0, 0.0)
 
-- Rivers placed on top of terrain, slightly elevated to avoid z-fighting
-- River geometry uses separate shader with scrolling texture
-- Rivers affected by fog like other geometry
-- Optional: Rivers can also use normal mapping for butter surface detail
+![scrolling enabled](student_outputs/final_project/scrolling_enabled.png)
 
-#### Phase 4: Instanced Rendering
+#### test 10: scrolling fast
+Texture scrolls horizontally at high speed. demonstrates speed parameter control.
 
-1. Create low-poly bread models (rolls, baguettes, croissants)
-2. Implement instanced rendering using glDrawArraysInstanced or glDrawElementsInstanced
-3. Generate instance transformation matrices (positions, rotations, scales)
-4. Pass transformations via vertex attributes or uniform buffer
-5. Populate landscape with hundreds of bread instances
-6. Measure FPS with varying instance counts
+Scene: scenefiles/test_scrolling.json
+settings: enablescrolling = true, scrollspeed = 2.0, scrolldirection = (1.0, 0.0)
 
-Component Integration:
+![scrolling fast](student_outputs/final_project/scrolling_fast.png)
 
-- Instances positioned on terrain surface (sample terrain height at x,z positions)
-- Instances use same normal mapping shader as other geometry
-- Instances affected by fog based on their distance from camera
-- Instance density decreases with distance for performance
-- Each instance type (roll, baguette, croissant) batched separately
+#### test 11: scrolling vertical
+texture scrolls vertically. demonstrates direction parameter control.
 
+scene: scenefiles/test_scrolling.json
+settings: enablescrolling = true, scrollspeed = 0.5, scrolldirection = (0.0, 1.0)
 
+![scrolling vertical](student_outputs/final_project/scrolling_vertical.png)
 
+### instancing tests
 
-## Testing Requirements
+#### test 12: instancing disabled
+Baseline render showing only scene geometry. no instanced cubes.
 
-### Realtime Fog Tests
+scene: scenefiles/test_instancing.json
+settings: enableinstancing = false
 
-- Vary fog density parameter (light haze to heavy golden fog)
-- Vary fog start and end distances
-- Comparison with fog disabled
-- Test fog at different times of day (lighting conditions)
+![instancing disabled](student_outputs/final_project/instancing_disabled.png)
 
-### Normal Mapping Tests
+#### test 13: instancing enabled
+100 cubes rendered with single draw call. random positions, rotations, and scales.
 
-- Comparison renders with normal mapping on/off
-- Multiple normal map textures (fine crust, coarse crust, sourdough bubbles)
-- Different normal map intensities (subtle to extreme)
-- Visualize normal vectors as RGB colors for debugging
-- Test on terrain, mountains, and instanced objects
+scene: scenefiles/test_instancing.json
+settings: enableinstancing = true
 
-### Scrolling Textures Tests
+![instancing enabled](student_outputs/final_project/instancing_enabled_100.png)
 
-- Different scroll speeds (0.5x, 1.0x, 2.0x, 5.0x)
-- Different scroll directions (downstream, upstream, diagonal)
-- Verify UV wrapping behavior at boundaries
-- Test with different butter/liquid textures
+#### test 14: random generation 1
+first random generation showing stochastic behavior. same parameters produce different results.
 
-### Instanced Rendering Tests
+scene: scenefiles/test_instancing.json
+settings: enableinstancing = true
 
-- FPS comparison: 0 instances vs 100 instances vs 500 instances vs 1000 instances
-- Verify correct transformations for each instance (position, rotation, scale)
-- Show both instanced and non-instanced rendering methods
-- Test multiple instance types (rolls, baguettes, croissants) rendered simultaneously
+![instancing random 1](student_outputs/final_project/instancing_random_1.png)
 
+#### test 15: random generation 2
+second random generation with different cube positions and orientations.
 
+scene: scenefiles/test_instancing.json
+settings: enableinstancing = true
 
+![instancing random 2](student_outputs/final_project/instancing_random_2.png)
 
-## Debugging Strategy
+#### test 16: random generation 3
+third random generation demonstrating consistent randomness across runs.
 
-### Realtime Fog
+scene: scenefiles/test_instancing.json
+settings: enableinstancing = true
 
-- Render fog factor as grayscale overlay
-- Isolate fog calculation by disabling other lighting effects
-- Verify depth values are being read correctly from depth buffer
-- Toggle fog on/off with keyboard input
+![instancing random 3](student_outputs/final_project/instancing_random_3.png)
 
-### Normal Mapping
+### combined test
 
-- Toggle feature on/off with keyboard input
-- Render normal vectors as RGB colors (visualize tangent space)
-- Verify tangent and bitangent calculations are correct
-- Test with flat normal map (should look identical to no normal mapping)
-- Check normal map texture loading and sampling
+#### test 17: all features combined
+all visual effects enabled simultaneously. demonstrates feature independence and compatibility.
 
-### Scrolling Textures
+scene: scenefiles/test_all_features.json
+settings: all features enabled
 
-- Reduce scroll speed to near-zero to verify direction
-- Render UV coordinates as colors on geometry
-- Add pause/step functionality for frame-by-frame inspection
-- Verify time uniform is updating correctly
-- Check for UV seams or wrapping artifacts
+![all features combined](student_outputs/final_project/all_features_combined.png)
 
-### Instanced Rendering
+## unit tests
 
-- Draw wireframe or bounding boxes around each instance
-- Color-code instances by index to verify count
-- Print instance count and verify against expected value
-- Test with single instance first, then scale up
-- Verify transformation matrices are computed correctly
+tangent and bitangent correctness verified for all shape types:
+```bash
+cd build
+./test_tangent_bitangent
+```
 
+expected output:
+```
+testing cube tangent/bitangent orthogonality... passed
+testing cube tangent/bitangent handedness... passed
+testing sphere tangent/bitangent orthogonality... passed
+testing sphere tangent/bitangent handedness... passed
+testing cylinder tangent/bitangent orthogonality... passed
+testing cylinder tangent/bitangent handedness... passed
+testing cone tangent/bitangent orthogonality... passed
+testing cone tangent/bitangent handedness... passed
+all tests passed!
+```
 
+edge cases tested:
+- sphere poles where uv coordinates converge
+- cube corners and edges with uv discontinuities
+- cylinder caps with circular uv mapping
+- cone apex singularity
 
+texture manager functionality:
+```bash
+cd build
+./test_texture_manager
+```
 
+## command line usage
 
-## Scene Composition
+run specific test manually:
+```bash
+./build/BreadFinal scenefiles/test_fog.json --enable-fog --headless -o output.png
+```
 
-### Geometry
+available options:
+```
+--enable-fog / --disable-fog
+--fog-start <value>
+--fog-end <value>
+--fog-color <r,g,b>
 
-- Terrain: Rolling hills and valleys (procedural grid or heightmap, 100x100 to 200x200 vertices)
-- Mountains: 3-5 large loaf-shaped meshes in background (800-1200 units distant)
-- Butter Rivers: Winding path geometry cutting through terrain (lower poly, follows curves)
-- Bread Objects: Multiple types for instancing
-  - Bread rolls (spherical, ~100 triangles each)
-  - Baguettes (cylindrical, ~150 triangles each)
-  - Croissants (curved, ~200 triangles each)
+--enable-normal-mapping / --disable-normal-mapping
 
-### Textures
+--enable-scrolling / --disable-scrolling
+--scroll-speed <value>
+--scroll-direction <x,y>
 
-- Bread crust albedo: Golden brown base color with variation
-- Bread normal maps: Bumpy crust texture (512x512 or 1024x1024)
-  - Fine crust variant for terrain
-  - Coarse crust variant for mountains
-  - Smooth variant for rolls
-- Butter texture: Yellow-gold flowing liquid appearance
-- Sky: Warm gradient or solid color (toasted wheat color)
+--enable-instancing / --disable-instancing
 
-### Materials
+--headless (auto-save and exit)
+-o <file> (output path)
+```
 
-- All bread surfaces: Same base material with normal mapping
-  - Diffuse: Warm golden brown (RGB: 0.8, 0.6, 0.3)
-  - Specular: Low specularity for matte crust (0.1-0.2)
-  - Ambient: Warm tone matching fog color
-- Butter rivers: More specular for wet appearance (0.4-0.6)
+## design decisions
 
-### Lighting
+normal mapping: fixed sphere pole singularity by detecting degenerate tangent and recomputing from cross product of normal and bitangent. ensures orthogonality is maintained even at problematic uv coordinates.
 
-- Directional Light: Warm sunlight from above-front (simulating golden hour)
-  - Direction: approximately (-0.3, -0.7, -0.5) normalized
-  - Color: Slightly warm white (RGB: 1.0, 0.95, 0.85)
-- Ambient: Warm golden ambient matching fog
-  - Color: Golden (RGB: 0.9, 0.7, 0.4) at low intensity (0.2-0.3)
+fog: linear interpolation chosen over exponential fog for predictable behavior and simpler parameter tuning. background color set to match fog color for seamless blending at far plane.
 
-### Camera
+scrolling: uv offset applied before texture sampling allows scrolling to work with any texture. direction vector normalized to ensure consistent speed regardless of direction.
 
-- Starting position: Elevated view of landscape (y: 50-100 units)
-- Movement: Free-fly camera or orbital camera
-- Field of view: 60-75 degrees
-- far plane: Set beyond mountains (1500-2000 units) to capture full scene
+instancing: random transformations include position, rotation around y-axis, and uniform scale. vertical spread reduced to 30% of horizontal spread for better visual distribution.
 
-### Layout
+## files modified
 
-- Foreground (0-300 units): Terrain with dense instanced bread objects
-- Midground (300-800 units): Terrain with butter rivers, moderate bread instances
-- Background (800-1200 units): Mountain range with sparse or no instances
-- Sky/Fog: Uniform fog grows denser with distance, obscuring far mountains
+core implementation:
+- src/shapes/cube.cpp, sphere.cpp, cone.cpp, cylinder.cpp - extended vertex data to 14 floats
+- src/shapes/shapemanager.cpp - updated vao setup for additional vertex attributes
+- src/rendering/texturemanager.cpp - texture loading and caching
+- src/rendering/instancemanager.cpp - instance transformation generation
+- resources/shaders/default.vert - tbn vectors and instance matrix support
+- resources/shaders/default.frag - fog, normal mapping, and scrolling implementation
+- src/realtime.cpp - feature integration and rendering pipeline
+- src/main.cpp - command line argument parsing
 
-## Deliverables
+testing:
+- tests/test_tangent_bitangent.cpp - tbn correctness verification
+- tests/test_texture_manager.cpp - texture loading verification
+- scenefiles/test_fog.json, test_normal_mapping.json, test_scrolling.json, test_instancing.json
+- run-tests.sh - automated test execution
 
-1. Updated codebase building on Realtime project
-2. Test cases demonstrating each feature with parameter variations
-3. Screenshots or videos showing all four features working
-4. performance measurements for instanced rendering
-5. Submission template documenting implementation and results
+## known issues
+
+none. all features working as intended.
