@@ -6,9 +6,12 @@ layout(location = 2) in vec2 uv;
 layout(location = 3) in vec3 tangent;
 layout(location = 4) in vec3 bitangent;
 
+layout(location = 5) in mat4 instanceMatrix;
+
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+uniform bool useInstancing;
 
 out vec3 fragPosition;
 out vec3 fragNormal;
@@ -17,13 +20,14 @@ out vec3 fragTangent;
 out vec3 fragBitangent;
 
 void main() {
-    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    mat4 finalModelMatrix = useInstancing ? instanceMatrix : modelMatrix;
+
+    vec4 worldPosition = finalModelMatrix * vec4(position, 1.0);
     fragPosition = worldPosition.xyz;
-    fragNormal = mat3(transpose(inverse(modelMatrix))) * normal;
+    fragNormal = mat3(transpose(inverse(finalModelMatrix))) * normal;
     fragUV = uv;
 
-    // transform tangent and bitangent to world space (not used yet)
-    mat3 normalMatrix = mat3(transpose(inverse(modelMatrix)));
+    mat3 normalMatrix = mat3(transpose(inverse(finalModelMatrix)));
     fragTangent = normalMatrix * tangent;
     fragBitangent = normalMatrix * bitangent;
 

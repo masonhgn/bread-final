@@ -1,0 +1,133 @@
+{
+  "name": "root",
+  "globalData": {
+    "ambientCoeff": 0.5,
+    "diffuseCoeff": 0.8,
+    "specularCoeff": 0.5,
+    "transparentCoeff": 0
+  },
+  "cameraData": {
+    "position": [0, 2, 8],
+    "up": [0, 1, 0],
+    "look": [0, 0, -1],
+    "heightAngle": 55
+  },
+  "groups": [
+    {
+      "name": "scene",
+      "lights": [
+        {
+          "type": "directional",
+          "color": [1, 1, 1],
+          "attenuationCoeff": [1, 0, 0],
+          "direction": [-1, -1, -1]
+        }
+      ],
+      "groups": [
+        {
+          "name": "point_light",
+          "translate": [-3, 3, 0],
+          "lights": [
+            {
+              "type": "point",
+              "color": [0.5, 0.5, 0.8],
+              "attenuationCoeff": [1, 0.1, 0.01]
+            }
+          ]
+        },
+        {
+          "name": "cube_1",
+          "translate": [-2, 0, -2],
+          "primitives": [
+            {
+              "type": "cube",
+              "ambient": [0.9, 0.9, 0.9],
+              "diffuse": [1.0, 1.0, 1.0],
+              "specular": [0.3, 0.3, 0.3],
+              "shininess": 32,
+              "reflective": [0, 0, 0],
+              "transparent": [0, 0, 0]
+            }
+          ]
+        },
+        {
+          "name": "sphere_1",
+          "translate": [2, 0, -2],
+          "primitives": [
+            {
+              "type": "sphere",
+              "ambient": [0.9, 0.9, 0.9],
+              "diffuse": [1.0, 1.0, 1.0],
+              "specular": [0.3, 0.3, 0.3],
+              "shininess": 64,
+              "reflective": [0, 0, 0],
+              "transparent": [0, 0, 0]
+            }
+          ]
+        },
+        {
+          "name": "cylinder_1",
+          "translate": [-2, 0, -6],
+          "primitives": [
+            {
+              "type": "cylinder",
+              "ambient": [0.9, 0.9, 0.9],
+              "diffuse": [1.0, 1.0, 1.0],
+              "specular": [0.3, 0.3, 0.3],
+              "shininess": 48,
+              "reflective": [0, 0, 0],
+              "transparent": [0, 0, 0]
+            }
+          ]
+        },
+        {
+          "name": "cone_1",
+          "translate": [2, 0, -6],
+          "primitives": [
+            {
+              "type": "cone",
+              "ambient": [0.9, 0.9, 0.9],
+              "diffuse": [1.0, 1.0, 1.0],
+              "specular": [0.3, 0.3, 0.3],
+              "shininess": 40,
+              "reflective": [0, 0, 0],
+              "transparent": [0, 0, 0]
+            }
+          ]
+        },
+        {
+          "name": "cube_far",
+          "translate": [0, 0, -10],
+          "scale": [0.8, 0.8, 0.8],
+          "primitives": [
+            {
+              "type": "cube",
+              "ambient": [0.9, 0.9, 0.9],
+              "diffuse": [1.0, 1.0, 1.0],
+              "specular": [0.3, 0.3, 0.3],
+              "shininess": 50,
+              "reflective": [0, 0, 0],
+              "transparent": [0, 0, 0]
+            }
+          ]
+        },
+        {
+          "name": "sphere_far",
+          "translate": [0, 0, -14],
+          "scale": [1.2, 1.2, 1.2],
+          "primitives": [
+            {
+              "type": "sphere",
+              "ambient": [0.9, 0.9, 0.9],
+              "diffuse": [1.0, 1.0, 1.0],
+              "specular": [0.3, 0.3, 0.3],
+              "shininess": 80,
+              "reflective": [0, 0, 0],
+              "transparent": [0, 0, 0]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

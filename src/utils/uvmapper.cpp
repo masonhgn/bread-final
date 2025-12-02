@@ -15,11 +15,12 @@ glm::vec2 getUVCoords(PrimitiveType type, const glm::vec3 &pOS) {
             const float x = pOS.x, y = pOS.y, z = pOS.z;
             const glm::vec3 a = glm::abs(pOS);
             glm::vec3 center, T, B;
+            const float eps = 0.0001f;
 
-            if (a.x >= a.y && a.x >= a.z) {
+            if (a.x > a.y + eps && a.x > a.z + eps) {
                 if (x > 0.f) { center = {+0.5f, 0.f, 0.f}; T = {0, 0, -1}; B = {0, 1, 0}; }
                 else         { center = {-0.5f, 0.f, 0.f}; T = {0, 0, +1}; B = {0, 1, 0}; }
-            } else if (a.y >= a.x && a.y >= a.z) {
+            } else if (a.y > a.x + eps && a.y > a.z + eps) {
                 if (y > 0.f) { center = {0.f, +0.5f, 0.f}; T = {+1, 0, 0}; B = {0, 0, -1}; }
                 else         { center = {0.f, -0.5f, 0.f}; T = {+1, 0, 0}; B = {0, 0, +1}; }
             } else {
@@ -31,12 +32,7 @@ glm::vec2 getUVCoords(PrimitiveType type, const glm::vec3 &pOS) {
             float u = glm::dot(q, T) + 0.5f;
             float v = 0.5f - glm::dot(q, B);
 
-            // //scaling to fix
-            // u *= textureScale;
-            // v *= textureScale;
-
-            // return {wrap01(u), wrap01(v)};
-            return {u,v};
+            return {u, v};
         }
 
         //sphere

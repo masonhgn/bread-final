@@ -16,6 +16,7 @@ class MainWindow : public QWidget
 public:
     void initialize();
     void finish();
+    void saveScreenshot(const std::string& filePath);
 
 private:
     void connectUIElements();

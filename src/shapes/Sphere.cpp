@@ -12,20 +12,28 @@ glm::vec3 spherePoint(float phi, float theta, float r = 0.5f) {
     return glm::vec3(x, y, z);
 }
 
-// compute tangent vector (derivative with respect to theta - longitude direction)
 glm::vec3 sphereTangent(float phi, float theta, float r = 0.5f) {
     float x = -r * sin(phi) * sin(theta);
     float y = 0.0f;
     float z = -r * sin(phi) * cos(theta);
-    return glm::normalize(glm::vec3(x, y, z));
+
+    glm::vec3 t(x, y, z);
+    if (glm::length(t) < 0.0001f) {
+        return glm::vec3(1, 0, 0);
+    }
+    return glm::normalize(t);
 }
 
-// compute bitangent vector (derivative with respect to phi - latitude direction)
 glm::vec3 sphereBitangent(float phi, float theta, float r = 0.5f) {
     float x = r * cos(phi) * cos(theta);
     float y = -r * sin(phi);
     float z = -r * cos(phi) * sin(theta);
-    return glm::normalize(glm::vec3(x, y, z));
+
+    glm::vec3 b(x, y, z);
+    if (glm::length(b) < 0.0001f) {
+        return glm::vec3(0, 1, 0);
+    }
+    return glm::normalize(b);
 }
 
 void Sphere::updateParams(int param1, int param2) {
@@ -38,11 +46,15 @@ void Sphere::updateParams(int param1, int param2) {
 void Sphere::makeTile(glm::vec3 topLeft, glm::vec3 topRight,
                       glm::vec3 bottomLeft, glm::vec3 bottomRight,
                       float phi1, float phi2, float theta1, float theta2) {
-    // helper to insert position + normal + uv + tangent + bitangent for a vertex
     auto helper = [&](glm::vec3 p, float phi, float theta) {
         glm::vec3 n = glm::normalize(p);
         glm::vec3 tangent = sphereTangent(phi, theta);
         glm::vec3 bitangent = sphereBitangent(phi, theta);
+
+        // recompute tangent at poles to maintain orthogonality
+        if (glm::length(glm::vec3(-sin(phi) * sin(theta), 0, -sin(phi) * cos(theta))) < 0.0001f) {
+            tangent = glm::normalize(glm::cross(n, bitangent));
+        }
 
         insertVec3(m_vertexData, p);
         insertVec3(m_vertexData, n);
@@ -63,15 +75,13 @@ void Sphere::makeTile(glm::vec3 topLeft, glm::vec3 topRight,
 }
 
 void Sphere::makeWedge(float currentTheta, float nextTheta) {
-    // create a single wedge of the sphere using the makeTile() function
     int latDiv = std::max(2, m_param1);
-    float phiStep = M_PI / latDiv;  // π radians from top to bottom
+    float phiStep = M_PI / latDiv;
 
     for (int i = 0; i < latDiv; i++) {
-        float phi1 = i * phiStep;         // current latitude
-        float phi2 = (i + 1) * phiStep;   // next latitude
+        float phi1 = i * phiStep;
+        float phi2 = (i + 1) * phiStep;
 
-        // compute 4 corners of this tile
         glm::vec3 topLeft     = spherePoint(phi1, currentTheta);
         glm::vec3 topRight    = spherePoint(phi1, nextTheta);
         glm::vec3 bottomLeft  = spherePoint(phi2, currentTheta);
@@ -82,7 +92,6 @@ void Sphere::makeWedge(float currentTheta, float nextTheta) {
 }
 
 void Sphere::makeSphere() {
-    // create a full sphere using the makeWedge() function
     int lonDiv = std::max(3, m_param2);
     float thetaStep = glm::radians(360.f / lonDiv);
 

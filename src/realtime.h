@@ -16,6 +16,8 @@
 #include "camera/Camera.h"
 #include "shapes/ShapeManager.h"
 #include "rendering/ShaderManager.h"
+#include "rendering/TextureManager.h"
+#include "rendering/InstanceManager.h"
 #include "utils/sceneparser.h"
 
 class Realtime : public QOpenGLWidget
@@ -62,4 +64,12 @@ private:
     std::unique_ptr<Camera> m_camera;
     ShapeManager m_shapeManager;
     ShaderManager m_shaderManager;
+    TextureManager m_textureManager;
+    InstanceManager m_instanceManager;
+
+    GLuint m_testNormalMapId = 0;  // test normal map texture
+    GLuint m_defaultWhiteTexture = 0;  // default 1x1 white texture
+    GLuint m_breadTextureId = 0;  // bread diffuse texture
+
+    float m_elapsedTime = 0.0f;  // total elapsed time for animations
 };

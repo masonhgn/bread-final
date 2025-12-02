@@ -148,6 +148,26 @@ int ShapeManager::getVertexCount(PrimitiveType type) const {
     return 0;
 }
 
+void ShapeManager::setupInstanceAttributes(PrimitiveType type, GLuint instanceVBO) {
+    GLuint vao = getVAO(type);
+    if (vao == 0 || instanceVBO == 0) {
+        return;
+    }
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+
+    for (int i = 0; i < 4; i++) {
+        glEnableVertexAttribArray(5 + i);
+        glVertexAttribPointer(5 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                              (void*)(i * sizeof(glm::vec4)));
+        glVertexAttribDivisor(5 + i, 1);
+    }
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 void ShapeManager::cleanup() {
     for (auto& pair : m_shapes) {
         ShapeData& data = pair.second;

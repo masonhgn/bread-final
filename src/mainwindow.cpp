@@ -196,12 +196,19 @@ void MainWindow::initialize() {
 
     // Set default values for near and far planes
     onValChangeNearBox(0.1f);
-    onValChangeFarBox(10.f);
+    onValChangeFarBox(30.f);
+
+    settings.sceneFilePath = "/Users/fluffy/projects/cs1230/bread-final/scenefiles/test_all_features.json";
 }
 
 void MainWindow::finish() {
     realtime->finish();
     delete(realtime);
+}
+
+void MainWindow::saveScreenshot(const std::string& filePath) {
+    std::cout << "saving screenshot to: " << filePath << std::endl;
+    realtime->saveViewportImage(filePath);
 }
 
 void MainWindow::connectUIElements() {

@@ -40,6 +40,13 @@ void ShaderManager::setUniformMat4(const std::string& name, const glm::mat4& mat
     }
 }
 
+void ShaderManager::setUniformVec2(const std::string& name, const glm::vec2& vec) const {
+    GLint loc = getUniformLocation(name);
+    if (loc != -1) {
+        glUniform2fv(loc, 1, &vec[0]);
+    }
+}
+
 void ShaderManager::setUniformVec3(const std::string& name, const glm::vec3& vec) const {
     GLint loc = getUniformLocation(name);
     if (loc != -1) {

@@ -27,6 +27,13 @@ void Realtime::finish() {
 
     m_shapeManager.cleanup();
     m_shaderManager.cleanup();
+    m_textureManager.cleanup();
+    m_instanceManager.cleanup();
+
+    if (m_defaultWhiteTexture != 0) {
+        glDeleteTextures(1, &m_defaultWhiteTexture);
+        m_defaultWhiteTexture = 0;
+    }
 
     this->doneCurrent();
 }
@@ -61,9 +68,27 @@ void Realtime::initializeGL() {
         return;
     }
 
+    glGenTextures(1, &m_defaultWhiteTexture);
+    glBindTexture(GL_TEXTURE_2D, m_defaultWhiteTexture);
+    unsigned char whitePixel[4] = {255, 255, 255, 255};
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whitePixel);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    m_shaderManager.use();
+    m_shaderManager.setUniformInt("diffuseTexture", 0);
+    m_shaderManager.setUniformInt("normalMap", 1);
+    glUseProgram(0);
+
     m_shapeManager.initialize(settings.shapeParameter1, settings.shapeParameter2);
 
     m_initialized = true;
+
+    if (!settings.sceneFilePath.empty()) {
+        std::cout << "Loading default scene: " << settings.sceneFilePath << std::endl;
+        sceneChanged();
+    }
 }
 
 void Realtime::setGlobalUniforms() {
@@ -74,12 +99,24 @@ void Realtime::setGlobalUniforms() {
     int numLights = std::min(static_cast<int>(m_renderData.lights.size()), 8);
     m_shaderManager.setUniformInt("numLights", numLights);
 
+    // debug: print light count once
+    static bool printedLights = false;
+    if (!printedLights) {
+        std::cout << "number of lights in scene: " << numLights << std::endl;
+        printedLights = true;
+    }
+
     for (int i = 0; i < numLights; i++) {
         m_shaderManager.setLight(i, m_renderData.lights[i]);
     }
 }
 
 void Realtime::renderShape(const RenderShapeData& shape) {
+    if (settings.enableInstancing && shape.primitive.type == PrimitiveType::PRIMITIVE_CUBE) {
+        return;
+    }
+
+    m_shaderManager.setUniformBool("useInstancing", false);
     m_shaderManager.setUniformMat4("modelMatrix", shape.ctm);
 
     const SceneMaterial& mat = shape.primitive.material;
@@ -93,6 +130,40 @@ void Realtime::renderShape(const RenderShapeData& shape) {
     m_shaderManager.setUniformVec4("diffuseColor", diffuse);
     m_shaderManager.setUniformVec4("specularColor", specular);
     m_shaderManager.setUniformFloat("shininess", mat.shininess);
+
+    bool hasDiffuseTexture = (m_breadTextureId != 0);
+    m_shaderManager.setUniformBool("hasDiffuseTexture", hasDiffuseTexture);
+
+    if (hasDiffuseTexture) {
+        m_textureManager.bindTexture(m_breadTextureId, GL_TEXTURE0);
+        m_shaderManager.setUniformInt("diffuseTexture", 0);
+
+        static bool printed = false;
+        if (!printed) {
+            std::cout << "bread diffuse texture is active (texture id: " << m_breadTextureId << ")" << std::endl;
+            printed = true;
+        }
+    } else {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, m_defaultWhiteTexture);
+    }
+
+    bool hasNormalMap = (m_testNormalMapId != 0) && settings.enableNormalMapping;
+    m_shaderManager.setUniformBool("hasNormalMap", hasNormalMap);
+
+    if (hasNormalMap) {
+        m_textureManager.bindTexture(m_testNormalMapId, GL_TEXTURE1);
+        m_shaderManager.setUniformInt("normalMap", 1);
+
+        static bool printed = false;
+        if (!printed) {
+            std::cout << "normal mapping is active (texture id: " << m_testNormalMapId << ")" << std::endl;
+            printed = true;
+        }
+    } else {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 
     GLuint vao = m_shapeManager.getVAO(shape.primitive.type);
     int vertexCount = m_shapeManager.getVertexCount(shape.primitive.type);
@@ -111,7 +182,19 @@ void Realtime::paintGL() {
         return;
     }
 
+    // set background color to match fog color if fog is enabled
+    if (settings.enableFog) {
+        glClearColor(settings.fogColor.r, settings.fogColor.g, settings.fogColor.b, 1.0f);
+    } else {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_defaultWhiteTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_defaultWhiteTexture);
 
     m_shaderManager.use();
 
@@ -123,16 +206,51 @@ void Realtime::paintGL() {
     m_shaderManager.setUniformInt("enableScrolling", settings.enableScrolling ? 1 : 0);
     m_shaderManager.setUniformInt("hasDiffuseTexture", 0);
     m_shaderManager.setUniformInt("hasNormalMap", 0);
+
+    m_shaderManager.setUniformInt("diffuseTexture", 0);
+    m_shaderManager.setUniformInt("normalMap", 1);
+
     m_shaderManager.setUniformVec3("fogColor", settings.fogColor);
     m_shaderManager.setUniformFloat("fogStart", settings.fogStart);
     m_shaderManager.setUniformFloat("fogEnd", settings.fogEnd);
     m_shaderManager.setUniformFloat("fogDensity", settings.fogDensity);
-    m_shaderManager.setUniformFloat("time", 0.0f); 
+    m_shaderManager.setUniformFloat("time", m_elapsedTime);
+
+    m_shaderManager.setUniformVec2("scrollDirection", settings.scrollDirection);
+    m_shaderManager.setUniformFloat("scrollSpeed", settings.scrollSpeed); 
 
 
 
     for (const RenderShapeData& shape : m_renderData.shapes) {
         renderShape(shape);
+    }
+
+    if (settings.enableInstancing && m_instanceManager.getInstanceCount() > 0) {
+        m_shaderManager.setUniformBool("useInstancing", true);
+
+        glm::vec4 ambient = glm::vec4(0.9f, 0.9f, 0.9f, 1.0f) * m_renderData.globalData.ka;
+        glm::vec4 diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) * m_renderData.globalData.kd;
+        glm::vec4 specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f) * m_renderData.globalData.ks;
+
+        m_shaderManager.setUniformVec4("ambientColor", ambient);
+        m_shaderManager.setUniformVec4("diffuseColor", diffuse);
+        m_shaderManager.setUniformVec4("specularColor", specular);
+        m_shaderManager.setUniformFloat("shininess", 25.0f);
+
+        bool hasDiffuseTexture = (m_breadTextureId != 0);
+        m_shaderManager.setUniformBool("hasDiffuseTexture", hasDiffuseTexture);
+
+        if (hasDiffuseTexture) {
+            m_textureManager.bindTexture(m_breadTextureId, GL_TEXTURE0);
+        }
+
+        GLuint vao = m_shapeManager.getVAO(PrimitiveType::PRIMITIVE_CUBE);
+        int vertexCount = m_shapeManager.getVertexCount(PrimitiveType::PRIMITIVE_CUBE);
+
+        if (vao != 0 && vertexCount > 0) {
+            glBindVertexArray(vao);
+            glDrawArraysInstanced(GL_TRIANGLES, 0, vertexCount, m_instanceManager.getInstanceCount());
+        }
     }
 
     glBindVertexArray(0);
@@ -170,6 +288,28 @@ void Realtime::sceneChanged() {
         settings.nearPlane,
         settings.farPlane
     );
+
+    std::string projectRoot = "/Users/fluffy/projects/cs1230/bread-final/";
+    std::string normalMapPath = projectRoot + "resources/textures/test_normal.png";
+    m_testNormalMapId = m_textureManager.loadTexture(normalMapPath);
+    if (m_testNormalMapId == 0) {
+        std::cout << "no test normal map found at: " << normalMapPath << std::endl;
+    }
+
+    std::string breadTexturePath = projectRoot + "resources/textures/bread.jpg";
+    m_breadTextureId = m_textureManager.loadTexture(breadTexturePath);
+    if (m_breadTextureId == 0) {
+        std::cout << "failed to load bread texture at: " << breadTexturePath << std::endl;
+    }
+
+    if (settings.enableInstancing) {
+        m_instanceManager.generateInstances(100, 15.0f);
+        m_instanceManager.uploadToGPU();
+        m_shapeManager.setupInstanceAttributes(PrimitiveType::PRIMITIVE_CUBE,
+                                                m_instanceManager.getInstanceVBO());
+        std::cout << "generated " << m_instanceManager.getInstanceCount()
+                  << " instances for cube" << std::endl;
+    }
 
     update();
 }
@@ -236,6 +376,9 @@ void Realtime::timerEvent(QTimerEvent *event) {
     float deltaTime = elapsedms * 0.001f;
     m_elapsedTimer.restart();
 
+    // update elapsed time for animations
+    m_elapsedTime += deltaTime;
+
     if (!m_camera) {
         return;
     }
@@ -266,7 +409,6 @@ void Realtime::timerEvent(QTimerEvent *event) {
 
 // DO NOT EDIT
 void Realtime::saveViewportImage(std::string filePath) {
-    // Make sure we have the right context and everything has been drawn
     makeCurrent();
 
     int fixedWidth = 1024;
@@ -284,7 +426,6 @@ void Realtime::saveViewportImage(std::string filePath) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fixedWidth, fixedHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
-    // Optional: Create a depth buffer if your rendering uses depth testing
     GLuint rbo;
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
@@ -297,19 +438,16 @@ void Realtime::saveViewportImage(std::string filePath) {
         return;
     }
 
-    // Render to the FBO
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glViewport(0, 0, fixedWidth, fixedHeight);
 
-    // Clear and render your scene here
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     paintGL();
 
-    // Read pixels from framebuffer
+    // read pixels from framebuffer
     std::vector<unsigned char> pixels(fixedWidth * fixedHeight * 3);
     glReadPixels(0, 0, fixedWidth, fixedHeight, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
 
-    // Unbind the framebuffer to return to default rendering to the screen
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Convert to QImage

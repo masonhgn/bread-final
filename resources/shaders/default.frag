@@ -48,6 +48,10 @@ uniform bool hasDiffuseTexture;
 uniform bool hasNormalMap;
 uniform float time;
 
+// scrolling parameters
+uniform vec2 scrollDirection;
+uniform float scrollSpeed;
+
 vec3 computeLight(Light light, vec3 normal, vec3 viewDir) {
     vec3 lightDir;
     float attenuation = 1.0;
@@ -92,37 +96,55 @@ vec3 computeLight(Light light, vec3 normal, vec3 viewDir) {
 
 void main() {
     vec3 normal = normalize(fragNormal);
+
+    if (enableNormalMapping && hasNormalMap) {
+        vec3 T = normalize(fragTangent);
+        vec3 B = normalize(fragBitangent);
+        vec3 N = normalize(fragNormal);
+        mat3 TBN = mat3(T, B, N);
+
+        vec3 normalMapSample = texture(normalMap, fragUV).rgb;
+        vec3 tangentSpaceNormal = normalMapSample * 2.0 - 1.0;
+        normal = normalize(TBN * tangentSpaceNormal);
+    }
+
     vec3 viewDir = normalize(cameraPos - fragPosition);
-    
-    // ambient
-    vec3 ambient = vec3(ambientColor);
-    
+
+    vec2 uv = fragUV;
+    if (enableScrolling && hasDiffuseTexture) {
+        uv += scrollDirection * scrollSpeed * time;
+    }
+
+    // sample diffuse texture if available
+    vec3 texColor = vec3(1.0);
+    if (hasDiffuseTexture) {
+        texColor = texture(diffuseTexture, uv).rgb;
+    }
+
+    // ambient (modulated by texture)
+    vec3 ambient = vec3(ambientColor) * texColor;
+
     // accumulate lighting from all lights
     vec3 lighting = vec3(0.0);
     for (int i = 0; i < numLights && i < 8; i++) {
-        lighting += computeLight(lights[i], normal, viewDir);
+        vec3 lightContrib = computeLight(lights[i], normal, viewDir);
+        // apply texture to diffuse component only (diffuse is first part of lightContrib)
+        lighting += lightContrib * texColor;
     }
-    
+
     vec3 result = ambient + lighting;
-    
-    // fog stub (person a will implement)
+
+    // apply distance-based fog
     if (enableFog) {
-        // todo: implement fog blending based on distance
-        // float distance = length(cameraPos - fragPosition);
-        // float fogFactor = ...
-        // result = mix(result, fogColor, fogFactor);
+        float distance = length(cameraPos - fragPosition);
+
+        // linear fog: fogFactor = 1.0 (no fog) at fogStart, 0.0 (full fog) at fogEnd
+        float fogFactor = (fogEnd - distance) / (fogEnd - fogStart);
+        fogFactor = clamp(fogFactor, 0.0, 1.0);
+
+        // blend between fog color and scene color
+        result = mix(fogColor, result, fogFactor);
     }
-    
-    // normal mapping stub (person a will implement)
-    if (enableNormalMapping && hasNormalMap) {
-        // todo: sample normal map and perturb surface normal
-    }
-    
-    // scrolling texture stub (person a will implement)
-    if (enableScrolling && hasDiffuseTexture) {
-        // todo: offset uv coordinates based on time
-        // vec2 scrolledUV = fragUV + scrollDirection * time * scrollSpeed;
-    }
-    
+
     fragColor = vec4(result, 1.0);
 }
