@@ -1,0 +1,44 @@
+{
+  "name": "Scrolling Texture Test",
+  "globalData": {
+    "ambientCoeff": 0.5,
+    "diffuseCoeff": 0.8,
+    "specularCoeff": 0.5,
+    "transparentCoeff": 0
+  },
+  "cameraData": {
+    "position": [0, 1.5, 4],
+    "up": [0, 1, 0],
+    "look": [0, 0, -1],
+    "heightAngle": 60
+  },
+  "groups": [
+    {
+      "lights": [
+        {
+          "type": "directional",
+          "color": [1, 1, 1],
+          "attenuationCoeff": [1, 0, 0],
+          "direction": [0, -1, -0.5]
+        }
+      ],
+      "groups": [
+        {
+          "translate": [-2, 0, -2],
+          "scale": [1.5, 1.5, 1.5],
+          "primitives": [{ "type": "cube", "ambient": [0.9, 0.9, 0.9], "diffuse": [1.0, 1.0, 1.0], "specular": [0.3, 0.3, 0.3], "shininess": 25 }]
+        },
+        {
+          "translate": [2, 0, -2],
+          "scale": [1.5, 1.5, 1.5],
+          "primitives": [{ "type": "cube", "ambient": [0.9, 0.9, 0.9], "diffuse": [1.0, 1.0, 1.0], "specular": [0.3, 0.3, 0.3], "shininess": 25 }]
+        },
+        {
+          "translate": [0, 0, -5],
+          "scale": [2, 2, 2],
+          "primitives": [{ "type": "cube", "ambient": [0.9, 0.9, 0.9], "diffuse": [1.0, 1.0, 1.0], "specular": [0.3, 0.3, 0.3], "shininess": 25 }]
+        }
+      ]
+    }
+  ]
+}
